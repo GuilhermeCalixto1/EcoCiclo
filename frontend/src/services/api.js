@@ -90,6 +90,18 @@ export const api = {
     }
   },
 
+  // Obter catadores, grandes geradores e prédios do mapa
+  async getMapLocations() {
+    try {
+      const res = await fetch(`${API_URL}/map-locations`);
+      if (!res.ok) throw new Error('Falha ao buscar pontos do mapa');
+      return await res.json();
+    } catch (err) {
+      console.warn('API indisponível, usando pontos do mapa padrão:', err.message);
+      return [];
+    }
+  },
+
   // Obter recompensas e ranking
   async getRewards() {
     try {

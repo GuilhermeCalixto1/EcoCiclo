@@ -52,7 +52,26 @@ CREATE TABLE IF NOT EXISTS public.collection_points (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- 5. Tabela de Solicitações de Coleta Domiciliar
+-- 5. Pontos operacionais exibidos no mapa (catadores, geradores e prédios)
+CREATE TABLE IF NOT EXISTS public.map_locations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(150) NOT NULL,
+    entity_type VARCHAR(30) NOT NULL CHECK (entity_type IN ('collector', 'large_generator', 'building')),
+    description TEXT,
+    address TEXT NOT NULL,
+    neighborhood TEXT,
+    city TEXT NOT NULL DEFAULT 'São Paulo',
+    latitude DOUBLE PRECISION NOT NULL CHECK (latitude BETWEEN -90 AND 90),
+    longitude DOUBLE PRECISION NOT NULL CHECK (longitude BETWEEN -180 AND 180),
+    phone TEXT,
+    service_status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (service_status IN ('active', 'inactive', 'pending')),
+    accepted_types TEXT[] NOT NULL DEFAULT '{}',
+    contact_name TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- 6. Tabela de Solicitações de Coleta Domiciliar
 CREATE TABLE IF NOT EXISTS public.collection_requests (
     id TEXT PRIMARY KEY DEFAULT ('col-' || extract(epoch from now())::bigint),
     user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
@@ -74,7 +93,7 @@ CREATE TABLE IF NOT EXISTS public.collection_requests (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- 6. Tabela de Recompensas e Parcerias Ecológicas
+-- 7. Tabela de Recompensas e Parcerias Ecológicas
 CREATE TABLE IF NOT EXISTS public.eco_rewards (
     id TEXT PRIMARY KEY DEFAULT ('rew-' || extract(epoch from now())::bigint),
     title TEXT NOT NULL,
@@ -86,7 +105,7 @@ CREATE TABLE IF NOT EXISTS public.eco_rewards (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- 7. Tabela de Histórico de Pontos e Transações Ecológicas
+-- 8. Tabela de Histórico de Pontos e Transações Ecológicas
 CREATE TABLE IF NOT EXISTS public.eco_transactions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -104,6 +123,7 @@ CREATE TABLE IF NOT EXISTS public.eco_transactions (
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.waste_types ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.collection_points ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.map_locations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.collection_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.eco_rewards ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.eco_transactions ENABLE ROW LEVEL SECURITY;
@@ -116,6 +136,10 @@ CREATE POLICY "Leitura pública de tipos de resíduos"
 -- Políticas para collection_points (Leitura pública permitida para todos)
 CREATE POLICY "Leitura pública de ecopontos"
     ON public.collection_points FOR SELECT
+    USING (true);
+
+CREATE POLICY "Leitura pública de pontos operacionais"
+    ON public.map_locations FOR SELECT
     USING (true);
 
 -- Políticas para eco_rewards (Leitura pública de recompensas disponíveis)
@@ -170,6 +194,17 @@ VALUES
     ('Ecoponto Central - Parque da Cidade', 'Av. das Nações, 450 - Centro', -23.55052, -46.633308, ARRAY['plastic', 'paper', 'glass', 'metal', 'electronic', 'cooking_oil'], 'Seg a Sáb: 08:00 às 18:00', '(11) 3214-5500', 'open'),
     ('Ponto Verde - Vila Madalena', 'Rua Fradique Coutinho, 980', -23.55745, -46.68912, ARRAY['plastic', 'paper', 'glass', 'organic'], 'Ter a Dom: 09:00 às 17:00', '(11) 3031-8822', 'open'),
     ('Ecoponto Eletrônicos & Sucata - Moema', 'Al. dos Maracatins, 1200', -23.60621, -46.66115, ARRAY['electronic', 'metal', 'cooking_oil'], 'Seg a Sex: 08:30 às 17:30', '(11) 5052-1144', 'open');
+
+-- Inserir pontos operacionais para o mapa
+INSERT INTO public.map_locations
+    (name, entity_type, description, address, neighborhood, latitude, longitude, phone, service_status, accepted_types, contact_name)
+VALUES
+    ('Cooperativa Recicla Centro', 'collector', 'Cooperativa de catadores com coleta programada para empresas e condomínios.', 'Rua do Glicério, 210 - Centro', 'Centro', -23.55520, -46.63210, '(11) 3112-4400', 'active', ARRAY['plastic', 'paper', 'glass', 'metal'], 'Maria da Silva'),
+    ('Coleta Cidadã Vila Mariana', 'collector', 'Catador autônomo cadastrado para rotas de recicláveis secos.', 'Rua Vergueiro, 1850 - Vila Mariana', 'Vila Mariana', -23.58980, -46.63580, '(11) 99876-1122', 'active', ARRAY['plastic', 'paper', 'metal'], 'João Santos'),
+    ('Mercado Municipal Sul', 'large_generator', 'Grande gerador de resíduos orgânicos, papelão e óleo de cozinha.', 'Av. Jabaquara, 3100 - Saúde', 'Saúde', -23.61850, -46.63890, '(11) 3555-8800', 'active', ARRAY['organic', 'paper', 'cooking_oil'], 'Ana Oliveira'),
+    ('Shopping Verde Norte', 'large_generator', 'Centro comercial com alto volume de papelão, plástico e vidro.', 'Av. Cruzeiro do Sul, 1550 - Santana', 'Santana', -23.51140, -46.62470, '(11) 3344-2211', 'active', ARRAY['plastic', 'paper', 'glass', 'metal'], 'Carlos Lima'),
+    ('Edifício Horizonte', 'building', 'Condomínio residencial com coleta seletiva para moradores.', 'Rua Harmonia, 720 - Vila Madalena', 'Vila Madalena', -23.55670, -46.69030, '(11) 3030-7788', 'active', ARRAY['plastic', 'paper', 'glass', 'metal'], 'Síndica Fernanda Costa'),
+    ('Condomínio Parque das Árvores', 'building', 'Condomínio com área de armazenamento temporário de recicláveis.', 'Rua das Acácias, 95 - Moema', 'Moema', -23.60320, -46.66710, '(11) 5050-6611', 'pending', ARRAY['plastic', 'paper', 'glass', 'organic'], 'Roberto Almeida');
 
 -- Inserir Catálogo de Recompensas
 INSERT INTO public.eco_rewards (id, title, partner, points_required, category, icon, available)

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Recycle, LayoutDashboard, CalendarPlus, ListChecks, MapPin, Award } from 'lucide-react';
+import { Recycle, LayoutDashboard, CalendarPlus, ListChecks, MapPin, Award, Truck, Network } from 'lucide-react';
 
 export function Navbar({ activeTab, setActiveTab, onOpenSchedule, isConnected }) {
   return (
@@ -30,11 +30,25 @@ export function Navbar({ activeTab, setActiveTab, onOpenSchedule, isConnected })
           Coletas
         </button>
         <button
+          className={`nav-tab-btn ${activeTab === 'tracking' ? 'active' : ''}`}
+          onClick={() => setActiveTab('tracking')}
+        >
+          <Truck size={17} />
+          Caminhão
+        </button>
+        <button
           className={`nav-tab-btn ${activeTab === 'ecopoints' ? 'active' : ''}`}
           onClick={() => setActiveTab('ecopoints')}
         >
           <MapPin size={17} />
           Ecopontos
+        </button>
+        <button
+          className={`nav-tab-btn ${activeTab === 'network-map' ? 'active' : ''}`}
+          onClick={() => setActiveTab('network-map')}
+        >
+          <Network size={17} />
+          Mapa da rede
         </button>
         <button
           className={`nav-tab-btn ${activeTab === 'rewards' ? 'active' : ''}`}

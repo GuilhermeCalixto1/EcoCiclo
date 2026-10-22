@@ -6,7 +6,9 @@ import { ScheduleModal } from './components/ScheduleModal';
 import { CollectionsManager } from './components/CollectionsManager';
 import { EcopointsMap } from './components/EcopointsMap';
 import { RewardsView } from './components/RewardsView';
+import { TruckTracking } from './components/TruckTracking';
 import { SupabaseInfoBanner } from './components/SupabaseInfoBanner';
+import { OperationalMap } from './components/OperationalMap';
 import { api } from './services/api';
 import { isSupabaseConfigured } from './services/supabase';
 import { Sparkles, Calendar, ArrowRight, Truck } from 'lucide-react';
@@ -25,6 +27,7 @@ export function App() {
     co2SavedKg: 26.4
   });
   const [ecopoints, setEcopoints] = useState([]);
+  const [mapLocations, setMapLocations] = useState([]);
   const [rewards, setRewards] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
@@ -49,6 +52,9 @@ export function App() {
 
       const pointsList = await api.getCollectionPoints();
       setEcopoints(pointsList);
+
+      const locationsList = await api.getMapLocations();
+      setMapLocations(locationsList);
 
       const rewList = await api.getRewards();
       setRewards(rewList);
@@ -132,7 +138,7 @@ export function App() {
                 </button>
                 <button
                   className="btn btn-secondary"
-                  onClick={() => setActiveTab('collections')}
+                  onClick={() => setActiveTab('tracking')}
                 >
                   <Truck size={18} />
                   Ver Rotas e Coletas
@@ -179,12 +185,24 @@ export function App() {
         />
       )}
 
+      {/* Visão: RASTREAMENTO DO CAMINHÃO */}
+      {activeTab === 'tracking' && (
+        <TruckTracking
+          collections={collections}
+          onOpenSchedule={() => setIsScheduleOpen(true)}
+        />
+      )}
+
       {/* Visão: ECOPONTOS FÍSICOS */}
       {activeTab === 'ecopoints' && (
         <EcopointsMap
           ecopoints={ecopoints}
           wasteTypes={wasteTypes}
         />
+      )}
+
+      {activeTab === 'network-map' && (
+        <OperationalMap locations={mapLocations} />
       )}
 
       {/* Visão: RECOMPENSAS E RANKING */}

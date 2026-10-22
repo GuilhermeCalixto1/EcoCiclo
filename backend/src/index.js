@@ -6,6 +6,7 @@ import { wasteTypesRouter } from './routes/wasteTypes.js';
 import { collectionsRouter } from './routes/collections.js';
 import { pointsRouter } from './routes/points.js';
 import { collectionPointsRouter } from './routes/collectionPoints.js';
+import { mapLocationsRouter } from './routes/mapLocations.js';
 import { isSupabaseConfigured } from './supabase.js';
 
 dotenv.config();
@@ -37,6 +38,7 @@ app.use('/api/waste-types', wasteTypesRouter);
 app.use('/api/collections', collectionsRouter);
 app.use('/api/points', pointsRouter);
 app.use('/api/collection-points', collectionPointsRouter);
+app.use('/api/map-locations', mapLocationsRouter);
 
 // Tratamento 404
 app.use((req, res) => {
